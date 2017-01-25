@@ -115,11 +115,13 @@ class Topology:
             return -1
         if self.is_node_validate_on_network(j_node) == 0:
             return -1
+
         xy_distance = self.get_xy_distance(i_node, j_node)
         i_node_subnet_address = self.get_subnet_address(i_node)
         j_node_subnet_address = self.get_subnet_address(j_node)
         src_subnet_set = [i_node_subnet_address]
         des_subnet_set = [j_node_subnet_address]
+
         src_subnet_set.extend(self.neighbor_subnet_list(i_node_subnet_address))
         des_subnet_set.extend(self.neighbor_subnet_list(j_node_subnet_address))
         src_to_hub = self.global_x_dim * self.global_y_dim
@@ -245,34 +247,46 @@ class Topology:
 
         distance = src_to_hub + des_to_hub
         if src_hub_subnet_address != des_hub_subnet_address:
-            distance += 1  # 1= hub to hub(inter hub) hop
+            distance += 1  # 1= hub to hub(inter hub) distance
         if distance > xy_distance:
             distance = xy_distance
         return distance
+
+    def calculate_distance_at_hub_reliability(self, fault_free_distance, faulty_src_distance, faulty_des_distance,
+                                              faulty_src_and_des_distance, xy_distance, src_spare_hubs, des_spare_hubs):
+        fault_free_distance = self.hub_reliability * self.hub_reliability * fault_free_distance
+        faulty_src_subnet_distance = self.hub_reliability * (1 - self.hub_reliability) * (
+            (1 - (math.pow(1 - self.hub_reliability, src_spare_hubs))) * faulty_src_distance + (
+                (math.pow(1 - self.hub_reliability, src_spare_hubs)) * xy_distance))
+        faulty_des_subnet_distance = (1 - self.hub_reliability) * self.hub_reliability * (
+            (1 - (math.pow(1 - self.hub_reliability, des_spare_hubs))) * faulty_des_distance + (
+                math.pow(1 - self.hub_reliability, des_spare_hubs)) * xy_distance)
+        faulty_src_and_des_subnet_distance = (1 - self.hub_reliability) * (1 - self.hub_reliability) * (
+            (1 - (math.pow(1 - self.hub_reliability, src_spare_hubs))) * (1 - (
+                math.pow(1 - self.hub_reliability,
+                         des_spare_hubs))) * faulty_src_and_des_distance + (
+                1 - ((1 - (math.pow(1 - self.hub_reliability, src_spare_hubs))) * (
+                    1 - (math.pow(1 - self.hub_reliability, des_spare_hubs))))) * xy_distance)
+        return fault_free_distance + faulty_src_subnet_distance + faulty_des_subnet_distance + faulty_src_and_des_subnet_distance
 
     def get_novel_distance(self, i_node, j_node):
         if self.is_node_validate_on_network(i_node) == 0:
             return -1
         if self.is_node_validate_on_network(j_node) == 0:
             return -1
-        xy_distance = self.get_xy_distance(i_node, j_node)
+
         src_subnet_neighbor_count = len(self.neighbor_subnet_list(self.get_subnet_address(i_node)))
         des_subnet_neighbor_count = len(self.neighbor_subnet_list(self.get_subnet_address(j_node)))
-        fault_free_distance = self.hub_reliability * self.hub_reliability * self.get_novel_distance_fault_free(i_node,
-                                                                                                               j_node)
-        faulty_src_subnet_distance = self.hub_reliability * (1 - self.hub_reliability) * (
-            (1 - (math.pow(1 - self.hub_reliability, src_subnet_neighbor_count))) * self.get_novel_distance_faulty_src(
-                i_node, j_node) + ((math.pow(1 - self.hub_reliability, src_subnet_neighbor_count)) * xy_distance))
-        faulty_des_subnet_distance = (1 - self.hub_reliability) * self.hub_reliability * (
-            (1 - (math.pow(1 - self.hub_reliability, des_subnet_neighbor_count))) * self.get_novel_distance_faulty_des(
-                i_node, j_node) + (math.pow(1 - self.hub_reliability, des_subnet_neighbor_count)) * xy_distance)
-        faulty_src_and_des_subnet_distance = (1 - self.hub_reliability) * (1 - self.hub_reliability) * (
-            (1 - (math.pow(1 - self.hub_reliability, src_subnet_neighbor_count))) * (1 - (
-                math.pow(1 - self.hub_reliability,
-                         des_subnet_neighbor_count))) * self.get_novel_distance_faulty_src_and_des(
-                i_node, j_node) + (1 - ((1 - (math.pow(1 - self.hub_reliability, src_subnet_neighbor_count))) * (
-                1 - (math.pow(1 - self.hub_reliability, des_subnet_neighbor_count))))) * xy_distance)
-        return fault_free_distance + faulty_src_subnet_distance + faulty_des_subnet_distance + faulty_src_and_des_subnet_distance
+        xy_distance = self.get_xy_distance(i_node, j_node)
+        novel_distance_fault_free = self.get_novel_distance_fault_free(i_node, j_node)
+        novel_distance_faulty_src = self.get_novel_distance_faulty_src(i_node, j_node)
+        novel_distance_faulty_des = self.get_novel_distance_faulty_des(i_node, j_node)
+        novel_distance_faulty_src_and_des = self.get_novel_distance_faulty_src_and_des(i_node, j_node)
+
+        return self.calculate_distance_at_hub_reliability(novel_distance_fault_free, novel_distance_faulty_src,
+                                                          novel_distance_faulty_des, novel_distance_faulty_src_and_des,
+                                                          xy_distance, src_subnet_neighbor_count,
+                                                          des_subnet_neighbor_count)
 
     def get_topology_avg_distance(self):
         total_distance = 0
@@ -282,5 +296,4 @@ class Topology:
                 if i != j:
                     total_distance += self.get_novel_distance(i, j)
                     x += 1
-
-        return total_distance/x
+        return total_distance / x
