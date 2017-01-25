@@ -19,12 +19,12 @@ class Topology:
         if global_x_dim == 0 or global_y_dim == 0 or local_x_dim == 0 or local_y_dim == 0 or global_x_dim < local_x_dim or global_y_dim < local_y_dim or global_x_dim % local_x_dim != 0 or global_y_dim % local_y_dim != 0:
             return 0
 
-        if len(node_hub_connection_list) > global_x_dim * global_y_dim:
+        if len(node_hub_connection_list) != global_x_dim * global_y_dim:
             return 0
         if hub_reliability < 0 or hub_reliability > 1:
             return 0
         for node_hub_connection in node_hub_connection_list:
-            if node_hub_connection < 0 or node_hub_connection >= global_x_dim * global_y_dim:
+            if node_hub_connection < 0 or node_hub_connection > 1:
                 return 0
         self.global_x_dim = global_x_dim
         self.global_y_dim = global_y_dim
@@ -70,6 +70,16 @@ class Topology:
         subnet_y_cord = int(int(node_address / self.global_x_dim) / self.local_y_dim)
         return int(subnet_y_cord * (self.global_x_dim / self.local_x_dim) + subnet_x_cord)
 
+    def get_subnet_nodes_list(self, subnet_address):
+        result = []
+        subnet_x_dim = int(self.global_x_dim / self.local_x_dim)
+        subnet_x_cord = subnet_address % subnet_x_dim
+        subnet_y_cord = int(subnet_address / subnet_x_dim)
+        for j in range(subnet_y_cord * self.local_y_dim, subnet_y_cord * self.local_y_dim + self.local_y_dim):
+            for i in range(subnet_x_cord * self.local_x_dim, subnet_x_cord * self.local_x_dim + self.local_x_dim):
+                result.append(i + j * self.global_x_dim)
+        return result
+
     # ok
     def get_xy_distance(self, i_node, j_node):
         if self.is_node_validate_on_network(i_node) == 0:
@@ -83,9 +93,9 @@ class Topology:
     # ok
     def get_subnet_node_hub_connection_list(self, subnet_address):
         intra_subnet_node_hub_connection_list = []
-        for node_hub_connection in self.node_hub_connection_list:
-            if self.get_subnet_address(node_hub_connection) == subnet_address:
-                intra_subnet_node_hub_connection_list.append(node_hub_connection)
+        for i in self.get_subnet_nodes_list(subnet_address):
+            if self.node_hub_connection_list[i] == 1:
+                intra_subnet_node_hub_connection_list.append(i)
         return intra_subnet_node_hub_connection_list
 
     """
@@ -99,9 +109,8 @@ class Topology:
             return -1
         if self.is_subnet_validate_on_network(hub_subnet_address) == 0:
             return -1
-        # todo: needs improvement
         subnet_connected_to_hub_nodes = self.get_subnet_node_hub_connection_list(hub_subnet_address)
-        # endtodo
+
         if len(subnet_connected_to_hub_nodes) == 0:
             return -1
         result = self.global_x_dim * self.global_y_dim
