@@ -1,7 +1,7 @@
 from Topology import Topology
 from datetime import datetime
 
-myTopology = Topology(16, 16, 4, 4, [0, 4, 254], 1)
+myTopology = Topology(16, 16, 4, 4, [0, 4, 3, 2, 43, 53, 100, 254], 0)
 
 print(myTopology.get_novel_distance_fault_free(0, 254))
 print(myTopology.get_novel_distance_faulty_des(0, 254))
