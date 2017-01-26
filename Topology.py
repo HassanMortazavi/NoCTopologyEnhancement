@@ -1,4 +1,5 @@
 import math
+from numpy import matrix
 
 
 class Topology:
@@ -8,14 +9,17 @@ class Topology:
     local_y_dim = 0
     node_hub_connection_list = []
     hub_reliability = 0
+    radio_unit_area = 0
+    hub_port_unit_area = 0
 
-    def __init__(self, global_x_dim, global_y_dim, local_x_dim, local_y_dim, node_hub_connection_list, hub_reliability):
+    def __init__(self, global_x_dim, global_y_dim, local_x_dim, local_y_dim, node_hub_connection_list, hub_reliability,
+                 radio_unit_area, hub_port_unit_area):
         self.set_new_config(global_x_dim, global_y_dim, local_x_dim, local_y_dim, node_hub_connection_list,
-                            hub_reliability)
+                            hub_reliability, radio_unit_area, hub_port_unit_area)
 
     # ok
     def set_new_config(self, global_x_dim, global_y_dim, local_x_dim, local_y_dim, node_hub_connection_list,
-                       hub_reliability):
+                       hub_reliability, radio_unit_area, hub_port_unit_area):
         if global_x_dim == 0 or global_y_dim == 0 or local_x_dim == 0 or local_y_dim == 0 or global_x_dim < local_x_dim or global_y_dim < local_y_dim or global_x_dim % local_x_dim != 0 or global_y_dim % local_y_dim != 0:
             return 0
 
@@ -26,12 +30,16 @@ class Topology:
         for node_hub_connection in node_hub_connection_list:
             if node_hub_connection < 0 or node_hub_connection > 1:
                 return 0
+        if radio_unit_area < 0 or hub_port_unit_area < 0:
+            return 0
         self.global_x_dim = global_x_dim
         self.global_y_dim = global_y_dim
         self.local_x_dim = local_x_dim
         self.local_y_dim = local_y_dim
         self.node_hub_connection_list = node_hub_connection_list
         self.hub_reliability = hub_reliability
+        self.radio_unit_area = radio_unit_area
+        self.hub_port_unit_area = hub_port_unit_area
         return 1
 
     # ok
@@ -46,6 +54,9 @@ class Topology:
                     self.global_y_dim / self.local_y_dim):
             return 0
         return 1
+
+    def get_total_subnet_number(self):
+        return int((self.global_x_dim * self.global_y_dim) / (self.local_x_dim * self.local_y_dim))
 
     # ok
     def neighbor_subnet_list(self, subnet_address):
@@ -387,3 +398,96 @@ class Topology:
                     total_distance += self.get_fast_novel_distance(i, j)
                     x += 1
         return total_distance / x
+
+    def get_topology_distance_matrix(self):
+        w, h = self.global_x_dim * self.global_y_dim, self.global_x_dim * self.global_y_dim
+        Matrix = [[0 for x in range(w)] for y in range(h)]
+        for i in range(0, self.global_x_dim * self.global_y_dim):
+            for j in range(i, self.global_x_dim * self.global_y_dim):
+                if i != j:
+                    Matrix[i][j] = self.get_fast_novel_distance(i, j)
+        return Matrix
+
+    def matrix_corrector(self, matrix, node_address):
+        if self.is_node_validate_on_network(node_address) == 0:
+            return -1
+        node_subnet_address = self.get_subnet_address(node_address)
+        effected_subnets = [node_subnet_address]
+        effected_subnets.extend(self.neighbor_subnet_list(node_subnet_address))
+        effected_nodes = []
+        for effected_subnet in effected_subnets:
+            effected_nodes.extend(self.get_subnet_nodes_list(effected_subnet))
+        for i in range(0, self.global_x_dim * self.global_y_dim):
+            for j in range(i, self.global_x_dim * self.global_y_dim):
+                if i != j:
+                    for k in effected_nodes:
+                        if i == k or j == k:
+                            matrix[i][j] = self.get_fast_novel_distance(i, j)
+                            break
+        return matrix
+
+    def get_topology_avg_distance_via_matrix(self, matrix):
+        total_distance = 0
+        x = 0
+        for i in range(0, self.global_x_dim * self.global_y_dim):
+            for j in range(i, self.global_x_dim * self.global_y_dim):
+                if i != j:
+                    total_distance += matrix[i][j]
+                    x += 1
+        return total_distance / x
+
+    def get_topology_maximum_avg_distance(self):
+        total_distance = 0
+        x = 0
+        for i in range(0, self.global_x_dim * self.global_y_dim):
+            for j in range(i, self.global_x_dim * self.global_y_dim):
+                if i != j:
+                    total_distance += self.get_xy_distance(i, j)
+                    x += 1
+        return total_distance / x
+
+    def get_total_hub_area_overhead(self):
+        hub_connection_number = 0
+        for hub_connection in self.node_hub_connection_list:
+            if hub_connection:
+                hub_connection_number += 1
+        hub_ports_total_area = hub_connection_number * self.hub_port_unit_area
+        total_subnets_have_radio = 0
+        for subnet in range(0, self.get_total_subnet_number()):
+            for node in self.get_subnet_nodes_list(subnet):
+                if self.node_hub_connection_list[node]:
+                    total_subnets_have_radio += 1
+                    break
+        radios_total_area = total_subnets_have_radio * self.radio_unit_area
+        return hub_ports_total_area + radios_total_area
+
+    def get_maximum_total_hub_area_overhead(self):
+        hub_connection_number = self.global_x_dim * self.global_y_dim
+        hub_ports_total_area = hub_connection_number * self.hub_port_unit_area
+        total_subnets_have_radio = self.get_total_subnet_number()
+        radios_total_area = total_subnets_have_radio * self.radio_unit_area
+        return hub_ports_total_area + radios_total_area
+
+    def cal_cost_function(self, alpha):
+        if alpha < 0 or alpha > 1:
+            return -1
+        a = self.get_topology_avg_distance()
+        b = self.get_topology_maximum_avg_distance()
+        c = self.get_total_hub_area_overhead()
+        d = self.get_maximum_total_hub_area_overhead()
+
+        avg_distance_ratio = a / b
+        total_hub_area_overhead_ratio = c / d
+        return (alpha * avg_distance_ratio) + ((1 - alpha) * total_hub_area_overhead_ratio)
+
+    def fast_cal_cost_function_via_matrix(self, alpha, matrix):
+        if alpha < 0 or alpha > 1:
+            return -1
+        a = self.get_topology_avg_distance_via_matrix(matrix)
+        b = self.get_topology_maximum_avg_distance()
+        c = self.get_total_hub_area_overhead()
+        d = self.get_maximum_total_hub_area_overhead()
+
+        avg_distance_ratio = a / b
+        total_hub_area_overhead_ratio = c / d
+        return (alpha * avg_distance_ratio) + ((1 - alpha) * total_hub_area_overhead_ratio)

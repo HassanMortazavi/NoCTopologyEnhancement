@@ -1,11 +1,6 @@
-from SA import SA
-from datetime import datetime
+from Improver import Improver
 
+myImprover = Improver(network_size=256, network_hub_reliability=0.9, radio_unit_area=100, hub_port_unit_area=60,
+                      alpha=1)
 
-
-print("start ...")
-before_run_time = datetime.now()
-
-mySA = SA(256,0.9)
-
-print("exec time = " + str(datetime.now() - before_run_time))
+myImprover.start()
