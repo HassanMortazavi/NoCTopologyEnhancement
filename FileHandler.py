@@ -9,6 +9,16 @@ def print_to_file(file_name, str):
 
 def save_topology(topology):
     open('result.txt', 'w').close()
+    print_to_file('result.txt', "topology_avg_distance:")
+    print_to_file('result.txt', str(topology.get_topology_avg_distance()))
+    print_to_file('result.txt', '\n')
+    print_to_file('result.txt', '\n')
+    print_to_file('result.txt', "Number of total Hubs:")
+    print_to_file('result.txt', str(topology.get_total_hub_number()))
+    print_to_file('result.txt', '\n')
+    print_to_file('result.txt', '\n')
+    print_to_file('result.txt', "Topology:")
+    print_to_file('result.txt', '\n')
     for j in range(0, topology.global_y_dim):
         line = ""
         from_node = (topology.global_x_dim * topology.global_y_dim) - topology.global_x_dim
