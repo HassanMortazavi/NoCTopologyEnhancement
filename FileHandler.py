@@ -1,6 +1,12 @@
 from Topology import Topology
 
 
+def read_file(file_name):
+    with open(file_name) as f:
+        content = f.read()
+    return content
+
+
 def print_to_file(file_name, str):
     file = open(file_name, "a")
     file.write(str)
@@ -15,6 +21,14 @@ def save_topology(topology):
     print_to_file('result.txt', '\n')
     print_to_file('result.txt', "Number of total Hubs:")
     print_to_file('result.txt', str(topology.get_total_hub_number()))
+    print_to_file('result.txt', '\n')
+    print_to_file('result.txt', '\n')
+    print_to_file('result.txt', "Subnet_x_dim_size:")
+    print_to_file('result.txt', str(topology.local_x_dim))
+    print_to_file('result.txt', '\n')
+    print_to_file('result.txt', '\n')
+    print_to_file('result.txt', "Subnet_y_dim_size:")
+    print_to_file('result.txt', str(topology.local_y_dim))
     print_to_file('result.txt', '\n')
     print_to_file('result.txt', '\n')
     print_to_file('result.txt', "Topology:")

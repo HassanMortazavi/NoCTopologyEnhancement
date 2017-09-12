@@ -38,3 +38,16 @@ Topology:
 0 - 0 - 0 - 0 - 1 - 0 - 1 - 0 - 0 - 0 - 0 - 0 - 1 - 0 - 1 - 0
 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
 0 - 0 - 0 - 0 - 0 - 1 - 0 - 1 - 0 - 0 - 0 - 0 - 0 - 1 - 0 - 1
+
+
+hub_reliability= 1.0 topology_avg_distance= 7.9629136029411764
+hub_reliability= 0.9 topology_avg_distance= 8.294280022567532
+hub_reliability= 0.8 topology_avg_distance= 8.624626409411407
+hub_reliability= 0.7000000000000001 topology_avg_distance= 8.954673460092089
+hub_reliability= 0.6000000000000001 topology_avg_distance= 9.282981687254976
+hub_reliability= 0.5000000000000001 topology_avg_distance= 9.605292107077206
+hub_reliability= 0.40000000000000013 topology_avg_distance= 9.913724969412003
+hub_reliability= 0.30000000000000016 topology_avg_distance= 10.195829149699836
+hub_reliability= 0.20000000000000015 topology_avg_distance= 10.433474574705805
+hub_reliability= 0.10000000000000014 topology_avg_distance= 10.601579807077231
+hub_reliability= 1.3877787807814457e-16 topology_avg_distance= 10.666666666666666

@@ -1,7 +1,7 @@
 import math
 from numpy import matrix
 from datetime import datetime
-
+import threading
 
 class Topology:
     global_x_dim = 0
@@ -331,6 +331,7 @@ class Topology:
     def get_topology_avg_distance(self):
         total_distance = 0
         x = 0
+
         for i in range(0, self.global_x_dim * self.global_y_dim):
             for j in range(i, self.global_x_dim * self.global_y_dim):
                 if i != j:
@@ -350,6 +351,13 @@ class Topology:
     def matrix_corrector(self, matrix, node_address):
         if self.is_node_validate_on_network(node_address) == 0:
             return -1
+        tmp = self.get_total_hub_number()
+        self.node_hub_connection_list[node_address] = 1 - self.node_hub_connection_list[node_address]
+        tmp2 = self.get_total_hub_number()
+        self.node_hub_connection_list[node_address] = 1 - self.node_hub_connection_list[node_address]
+        if tmp != tmp2:
+            return self.get_topology_distance_matrix()
+
         node_subnet_address = self.get_subnet_address(node_address)
         effected_subnets = [node_subnet_address]
         effected_subnets.extend(self.neighbor_subnet_list(node_subnet_address))
@@ -474,45 +482,46 @@ class Topology:
                     x += 1
         return total_distance / x
 
-    def topology_relaibility_check(self):
-        #matrix = self.topology_props()
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+    def robustness_check(self):
+        self.hub_reliability = 1.0
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(self.get_topology_avg_distance()))
 
         self.hub_reliability -= 0.1
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
 
         self.hub_reliability -= 0.1
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
 
         self.hub_reliability -= 0.1
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
 
         self.hub_reliability -= 0.1
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
 
         self.hub_reliability -= 0.1
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
 
         self.hub_reliability -= 0.1
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
 
         self.hub_reliability -= 0.1
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
 
         self.hub_reliability -= 0.1
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
 
         self.hub_reliability -= 0.1
-        print(self.hub_reliability)
-        print(self.get_topology_avg_distance())
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
 
-        #print(self.topology_average_distance_by_props_matrix(matrix))
+        self.hub_reliability -= 0.1
+        print("hub_reliability= " + str(self.hub_reliability) + " topology_avg_distance= " + str(
+            self.get_topology_avg_distance()))
